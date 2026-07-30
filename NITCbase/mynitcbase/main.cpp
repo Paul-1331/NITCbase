@@ -26,7 +26,16 @@ int main(int argc, char *argv[]) {
   char message2[6];
   Disk::readBlock(buffer2,7000);
   memcpy(message2,buffer2+20,6);
-  std::cout<<message2;
+  std::cout<<message2<<"\n";
+
+  unsigned char buffer3[BLOCK_SIZE];
+  char message3[10];
+  Disk::readBlock(buffer3,0);
+  memcpy(message3,buffer3,10);
+  for(char c: message3){
+    std::cout<<(int)c<<" ";
+  }
+  std::cout<<"\n";
 
   return 0;
   //return FrontendInterface::handleFrontend(argc, argv);
