@@ -26,9 +26,8 @@ int main(int argc, char *argv[]) {
             Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
             attrCatBuffer.getRecord(attrCatRecord, j);
 
-            // Match table "Student" (or "Students") and attribute "Class"
-            if ((strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal, "Student") == 0 ||
-                 strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal, "Students") == 0) &&
+            // Match table "Students" and attribute "Class"
+            if (strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal, "Students") == 0 &&
                 strcmp(attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, "Class") == 0) {
 
                 unsigned char buffer[BLOCK_SIZE];
@@ -40,7 +39,7 @@ int main(int argc, char *argv[]) {
                 int recordSize = attrCount * ATTR_SIZE;
 
                 // Calculate pointer to AttrName field (Offset = HEADER_SIZE + slotMap + (recordSize * j) + 16)
-                unsigned char *slotPointer = buffer + HEADER_SIZE + slotCount + (recordSize * j) + ATTR_SIZE;
+                unsigned char *slotPointer = buffer + HEADER_SIZE + slotCount + (recordSize * j) + 16;
 
                 char newAttrName[] = "Batch";
                 memset(slotPointer, 0, ATTR_SIZE); // Clear old attribute string
