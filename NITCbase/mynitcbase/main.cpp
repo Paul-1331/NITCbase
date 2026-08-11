@@ -8,6 +8,7 @@
 // Qn2. To update the Schema of Students relation, change the name of Class to Batch
 int main(int argc, char *argv[]) {
     Disk disk_run;
+    StaticBuffer buffer;
 
     RecBuffer relCatBuffer(RELCAT_BLOCK);
     HeadInfo relCatHeader;
@@ -86,6 +87,7 @@ int main(int argc, char *argv[]) {
 // Qn1. To read across multiple blocks of the attribute catalog
 // int main(int argc, char *argv[]) {
 //     Disk disk_run;
+//     StaticBuffer buffer;
 
 //     RecBuffer relCatBuffer(RELCAT_BLOCK);
 //     HeadInfo relCatHeader;
@@ -125,6 +127,7 @@ int main(int argc, char *argv[]) {
 
 // int main(int argc, char *argv[]) {
 //   Disk disk_run;
+//   StaticBuffer buffer;
   
 //   // create objects for the relation catalog and attribute catalog
 //   RecBuffer relCatBuffer(RELCAT_BLOCK);
