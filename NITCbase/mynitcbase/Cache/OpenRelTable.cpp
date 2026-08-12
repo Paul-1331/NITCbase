@@ -47,6 +47,15 @@ OpenRelTable::OpenRelTable() {
   RelCacheTable::relCache[ATTRCAT_RELID] = (struct RelCacheEntry*)malloc(sizeof(RelCacheEntry));
   *(RelCacheTable::relCache[ATTRCAT_RELID]) = relCacheEntry;
 
+  // --- Students Relation (Slot 2) ---
+  relCatBlock.getRecord(relCatRecord, RELCAT_SLOTNUM_FOR_ATTRCAT + 1);
+  RelCacheTable::recordToRelCatEntry(relCatRecord, &relCacheEntry.relCatEntry);
+  relCacheEntry.recId.block = RELCAT_BLOCK;
+  relCacheEntry.recId.slot = RELCAT_SLOTNUM_FOR_ATTRCAT + 1;
+
+  RelCacheTable::relCache[ATTRCAT_RELID + 1] = (struct RelCacheEntry*)malloc(sizeof(RelCacheEntry));
+  *(RelCacheTable::relCache[ATTRCAT_RELID + 1]) = relCacheEntry;
+
 
   /************ Setting up Attribute cache entries ************/
   // (we need to populate attribute cache with entries for the relation catalog
@@ -108,6 +117,24 @@ OpenRelTable::OpenRelTable() {
 
   // set the value at AttrCacheTable::attrCache[ATTRCAT_RELID]
   AttrCacheTable::attrCache[ATTRCAT_RELID] = listHead;
+
+  prev = nullptr;
+  int numStudentAttrs = RelCacheTable::relCache[ATTRCAT_RELID + 1]->relCatEntry.numAttrs;
+
+  for (int j = 12; j < 12 + numStudentAttrs; j++) {
+    attrCatBlock.getRecord(attrCatRecord, j);
+    attrCacheEntry = (AttrCacheEntry*)malloc(sizeof(AttrCacheEntry));
+    if (j == 12) listHead = attrCacheEntry;
+
+    AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &attrCacheEntry->attrCatEntry);
+    attrCacheEntry->recId.block = ATTRCAT_BLOCK;
+    attrCacheEntry->recId.slot = j;
+
+    if (prev != nullptr) prev->next = attrCacheEntry;
+    prev = attrCacheEntry;
+  }
+  attrCacheEntry->next = nullptr;
+  AttrCacheTable::attrCache[ATTRCAT_RELID + 1] = listHead;
 }
 
 OpenRelTable::~OpenRelTable() {
