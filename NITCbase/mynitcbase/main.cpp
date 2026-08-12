@@ -5,163 +5,44 @@
 #include <cstring>
 #include <iostream>
 
-// Qn2. To update the Schema of Students relation, change the name of Class to Batch
 int main(int argc, char *argv[]) {
-    Disk disk_run;
-    StaticBuffer buffer;
+  Disk disk_run;
+  StaticBuffer buffer;
+  OpenRelTable cache;
 
-    RecBuffer relCatBuffer(RELCAT_BLOCK);
-    HeadInfo relCatHeader;
-    relCatBuffer.getHeader(&relCatHeader);
-
-    // Find "Student" relation and rename "Class" attribute to "Batch"
-    int blockNum = ATTRCAT_BLOCK;
-    bool updated = false;
-
-    while (blockNum != -1 && !updated) {
-        RecBuffer attrCatBuffer(blockNum);
-        HeadInfo attrCatHeader;
-        attrCatBuffer.getHeader(&attrCatHeader);
-
-        for (int j = 0; j < attrCatHeader.numEntries; j++) {
-            Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
-            attrCatBuffer.getRecord(attrCatRecord, j);
-
-            // Match table "Students" and attribute "Class"
-            if (strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal, "Students") == 0 &&
-                strcmp(attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, "Class") == 0) {
-
-                unsigned char buffer[BLOCK_SIZE];
-                // Read the CURRENT block where this attribute was found
-                Disk::readBlock(buffer, blockNum);
-
-                int slotCount = attrCatHeader.numSlots;
-                int attrCount = attrCatHeader.numAttrs;
-                int recordSize = attrCount * ATTR_SIZE;
-
-                // Calculate pointer to AttrName field (Offset = HEADER_SIZE + slotMap + (recordSize * j) + 16)
-                unsigned char *slotPointer = buffer + HEADER_SIZE + slotCount + (recordSize * j) + 16;
-
-                char newAttrName[] = "Batch";
-                memset(slotPointer, 0, ATTR_SIZE); // Clear old attribute string
-                strcpy((char *)slotPointer, newAttrName);
-
-                // Write modified block back to disk
-                Disk::writeBlock(buffer, blockNum);
-                updated = true;
-                break;
-            }
-        }
-        blockNum = attrCatHeader.rblock;
+  for(int i = 0;i<2;i++){
+    RelCatEntry relCatBuf;
+    int response = RelCacheTable::getRelCatEntry(i,&relCatBuf);
+    if(response != SUCCESS){
+        printf("Relation Catalog Entry not found.\n");
+        exit(1);
     }
-
-    // Print relation catalog again to confirm the updated schema
-    for (int i = 0; i < relCatHeader.numEntries; i++) {
-        Attribute relCatRecord[RELCAT_NO_ATTRS];
-        relCatBuffer.getRecord(relCatRecord, i);
-
-        printf("Relation: %s\n", relCatRecord[RELCAT_REL_NAME_INDEX].sVal);
-
-        int currentBlock = ATTRCAT_BLOCK;
-        while (currentBlock != -1) {
-            RecBuffer attrCatBuffer(currentBlock);
-            HeadInfo attrCatHeader;
-            attrCatBuffer.getHeader(&attrCatHeader);
-
-            for (int j = 0; j < attrCatHeader.numEntries; j++) {
-                Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
-                attrCatBuffer.getRecord(attrCatRecord, j);
-
-                if (strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal,relCatRecord[RELCAT_REL_NAME_INDEX].sVal) == 0) {
-                    const char *attrType = (attrCatRecord[ATTRCAT_ATTR_TYPE_INDEX].nVal == NUMBER) ? "NUM" : "STR";
-                    printf("  %s: %s\n", attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, attrType);
-                }
-            }
-            currentBlock = attrCatHeader.rblock;
+    printf("Relation: %s\n",relCatBuf.relName);
+    for(int j = 0;j<relCatBuf.numAttrs;j++){
+        AttrCatEntry attrCatBuf;
+        response = AttrCacheTable::getAttrCatEntry(i,j,&attrCatBuf);
+        if(response!=SUCCESS){
+            printf("Attribute Catalog Entry not found.\n");
+            exit(1);
         }
-        printf("\n");
+        const char *attrType = (attrCatBuf.attrType == NUMBER) ? "NUM" : "STR";
+        printf("  %s: %s\n", attrCatBuf.attrName, attrType);
     }
-    return 0;
+    printf("\n");
+  }
+
+  /*
+  for i = 0 and i = 1 (i.e RELCAT_RELID and ATTRCAT_RELID)
+
+      get the relation catalog entry using RelCacheTable::getRelCatEntry()
+      printf("Relation: %s\n", relname);
+
+      for j = 0 to numAttrs of the relation - 1
+          get the attribute catalog entry for (rel-id i, attribute offset j)
+           in attrCatEntry using AttrCacheTable::getAttrCatEntry()
+
+          printf("  %s: %s\n", attrName, attrType);
+  */
+
+  return 0;
 }
-
-// Qn1. To read across multiple blocks of the attribute catalog
-// int main(int argc, char *argv[]) {
-//     Disk disk_run;
-//     StaticBuffer buffer;
-
-//     RecBuffer relCatBuffer(RELCAT_BLOCK);
-//     HeadInfo relCatHeader;
-//     relCatBuffer.getHeader(&relCatHeader);
-
-//     // Loop through all relations in RelCat
-//     for (int i = 0; i < relCatHeader.numEntries; i++) {
-//         Attribute relCatRecord[RELCAT_NO_ATTRS];
-//         relCatBuffer.getRecord(relCatRecord, i);
-
-//         printf("Relation: %s\n", relCatRecord[RELCAT_REL_NAME_INDEX].sVal);
-
-//         // Traverse the AttrCat doubly-linked list
-//         int blockNum = ATTRCAT_BLOCK;
-//         while (blockNum != -1) {
-//             RecBuffer attrCatBuffer(blockNum);
-//             HeadInfo attrCatHeader;
-//             attrCatBuffer.getHeader(&attrCatHeader);
-
-//             for (int j = 0; j < attrCatHeader.numEntries; j++) {
-//                 Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
-//                 attrCatBuffer.getRecord(attrCatRecord, j);
-
-//                 // Print column details if relation names match
-//                 if (strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal,relCatRecord[RELCAT_REL_NAME_INDEX].sVal) == 0) {
-//                     const char *attrType = (attrCatRecord[ATTRCAT_ATTR_TYPE_INDEX].nVal == NUMBER) ? "NUM" : "STR";
-//                     printf("  %s: %s\n", attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, attrType);
-//                 }
-//             }
-//             // Advance to next block in AttrCat chain
-//             blockNum = attrCatHeader.rblock;
-//         }
-//         printf("\n");
-//     }
-//     return 0;
-// }
-
-// int main(int argc, char *argv[]) {
-//   Disk disk_run;
-//   StaticBuffer buffer;
-  
-//   // create objects for the relation catalog and attribute catalog
-//   RecBuffer relCatBuffer(RELCAT_BLOCK);
-//   RecBuffer attrCatBuffer(ATTRCAT_BLOCK);
-
-//   HeadInfo relCatHeader;
-//   HeadInfo attrCatHeader;
-
-//   // load the headers of both blocks into the relCatHeader and the attrCatHeader
-//   // (we will implement these functions later)
-//   relCatBuffer.getHeader(&relCatHeader);
-//   attrCatBuffer.getHeader(&attrCatHeader);
-
-//   for(int i = 0;i<relCatHeader.numEntries;i++){ // total relation count
-//     Attribute relCatRecord[RELCAT_NO_ATTRS];  // will store the record from the relation catalog
-    
-//     relCatBuffer.getRecord(relCatRecord,i);
-    
-//     printf("Relation: %s\n", relCatRecord[RELCAT_REL_NAME_INDEX].sVal);
-
-//     for(int j = 0;j<attrCatHeader.numEntries;j++){
-
-//       // declare attrCatRecord and load the attribute catalog entry into it
-//       Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
-//       attrCatBuffer.getRecord(attrCatRecord,j);
-
-//       if(strcmp(attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal,relCatRecord[RELCAT_REL_NAME_INDEX].sVal)==0){
-//         const char*attrType = attrCatRecord[ATTRCAT_ATTR_TYPE_INDEX].nVal == NUMBER ? "NUM": "STR";
-
-//         printf("  %s: %s\n", attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal,attrType);
-//       }
-//     }
-//     printf("\n");
-//   }
-  
-//   return 0;
-// }
