@@ -4,18 +4,29 @@
 
 unsigned char StaticBuffer::blocks[BUFFER_CAPACITY][BLOCK_SIZE];
 struct BufferMetaInfo StaticBuffer::metainfo[BUFFER_CAPACITY];
+unsigned char StaticBuffer::blockAllocMap[DISK_BLOCKS];
 
 StaticBuffer::StaticBuffer() {
-  for (int bufferIndex = 0;bufferIndex<BUFFER_CAPACITY;bufferIndex++) {
-    metainfo[bufferIndex].free = true;
-    metainfo[bufferIndex].dirty = false;
-    metainfo[bufferIndex].timeStamp = -1;
-    metainfo[bufferIndex].blockNum = -1;
-  }
+    // BLOCK_SIZE = 2048 bytes  DISK_BLOCK = 2048*4 = 8192 bytes
+    for(int blockNum = 0;blockNum<4;blockNum++){
+        Disk::readBlock(StaticBuffer::blockAllocMap+(blockNum*BLOCK_SIZE),blockNum);
+    }
+
+    for (int bufferIndex = 0;bufferIndex<BUFFER_CAPACITY;bufferIndex++) {
+        metainfo[bufferIndex].free = true;
+        metainfo[bufferIndex].dirty = false;
+        metainfo[bufferIndex].timeStamp = -1;
+        metainfo[bufferIndex].blockNum = -1;
+    }
 }
 
 // write back all modified blocks on system exit
 StaticBuffer::~StaticBuffer(){
+    
+    for(int blockNum = 0;blockNum<4;blockNum++){
+        Disk::writeBlock(StaticBuffer::blockAllocMap+(blockNum*BLOCK_SIZE),blockNum);
+    }
+
     for(int bufferIndex = 0;bufferIndex<BUFFER_CAPACITY;bufferIndex++){
         if(metainfo[bufferIndex].free==false&&metainfo[bufferIndex].dirty==true){
             Disk::writeBlock(StaticBuffer::blocks[bufferIndex], metainfo[bufferIndex].blockNum);

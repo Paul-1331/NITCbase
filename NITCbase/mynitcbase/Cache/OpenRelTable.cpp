@@ -222,6 +222,17 @@ int OpenRelTable::closeRel(int relId) {
   }
 
   if (RelCacheTable::relCache[relId] != nullptr) {
+    if(RelCacheTable::relCache[relId]->dirty){
+      Attribute record[RELCAT_NO_ATTRS];
+      RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[relId]->relCatEntry),record);
+
+      RecId recId = RelCacheTable::relCache[relId]->recId;
+      // declaring an object of RecBuffer class to write back to the buffer
+      RecBuffer relCatBlock(recId.block);
+      // Write back to the buffer using relCatBlock.setRecord() with recId.slot
+      relCatBlock.setRecord(record,recId.slot);
+    }
+
     free(RelCacheTable::relCache[relId]);
     RelCacheTable::relCache[relId] = nullptr;
   }
