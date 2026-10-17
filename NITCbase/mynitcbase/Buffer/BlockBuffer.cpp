@@ -340,3 +340,28 @@ int BlockBuffer::getFreeBlock(int blockType){
 int BlockBuffer::getBlockNum(){
     return this->blockNum;
 }
+
+void BlockBuffer::releaseBlock(){
+    // if blockNum is INVALID_BLOCKNUM (-1), or it is invalidated already, do nothing
+    if (this->blockNum == INVALID_BLOCKNUM || this->blockNum < 0 || this->blockNum >= DISK_BLOCKS) {
+        return;
+    }
+
+    // Get the buffer number assigned to the block using StaticBuffer::getBufferNum()
+    int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
+
+    // If the block is present in the buffer, free the buffer slot in metainfo
+    if (bufferNum >= 0 && bufferNum < BUFFER_CAPACITY) {
+        StaticBuffer::metainfo[bufferNum].free = true;
+        StaticBuffer::metainfo[bufferNum].dirty = false;
+        StaticBuffer::metainfo[bufferNum].blockNum = -1;
+        StaticBuffer::metainfo[bufferNum].timeStamp = -1;
+    }
+
+    // free the block in disk by setting the data type of the entry
+    // corresponding to the block number in StaticBuffer::blockAllocMap
+    // to UNUSED_BLK.
+    StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
+
+    this->blockNum = INVALID_BLOCKNUM;
+}

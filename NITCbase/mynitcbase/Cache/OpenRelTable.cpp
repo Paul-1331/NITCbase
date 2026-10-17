@@ -91,20 +91,44 @@ OpenRelTable::OpenRelTable() {
 }
 
 OpenRelTable::~OpenRelTable() {
-  // 1. Close all open user relations from rel-id = 2 onwards
+  // Close all open user relations from rel-id = 2 onwards
   for (int i = 2; i < MAX_OPEN; i++) {
     if (!tableMetaInfo[i].free) {
       OpenRelTable::closeRel(i);
     }
   }
 
-  // 2. Free memory allocated for catalog relations (slots 0 and 1)
-  for (int i = 0; i < 2; i++) {
-    if (RelCacheTable::relCache[i] != nullptr) {
-      free(RelCacheTable::relCache[i]);
-      RelCacheTable::relCache[i] = nullptr;
-    }
+  // releasing the relation cache entry of the attribute catalog
+  if(RelCacheTable::relCache[ATTRCAT_RELID]!=nullptr){
+    if(RelCacheTable::relCache[ATTRCAT_RELID]->dirty){
+      Attribute record[RELCAT_NO_ATTRS];
+      RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[ATTRCAT_RELID]->relCatEntry),record);
+      RecId recId = RelCacheTable::relCache[ATTRCAT_RELID]->recId;
 
+      RecBuffer relCatBlock(recId.block);
+      relCatBlock.setRecord(record, recId.slot);
+    }
+    free(RelCacheTable::relCache[ATTRCAT_RELID]);
+    RelCacheTable::relCache[ATTRCAT_RELID] = nullptr;
+  }
+
+  // releasing the relation cache entry of the relation catalog
+  if(RelCacheTable::relCache[RELCAT_RELID]!=nullptr){
+    if(RelCacheTable::relCache[RELCAT_RELID]->dirty){
+      Attribute record[RELCAT_NO_ATTRS];
+      RelCacheTable::relCatEntryToRecord(&(RelCacheTable::relCache[RELCAT_RELID]->relCatEntry), record);
+      RecId recId = RelCacheTable::relCache[RELCAT_RELID]->recId;
+
+      RecBuffer relCatBlock(recId.block);
+      relCatBlock.setRecord(record, recId.slot);
+    }
+    free(RelCacheTable::relCache[RELCAT_RELID]);
+    RelCacheTable::relCache[RELCAT_RELID] = nullptr;
+  }
+
+  // free the memory allocated for the attribute cache entries of the
+  // relation catalog and the attribute catalog
+  for (int i = 0; i < 2; i++){
     if (AttrCacheTable::attrCache[i] != nullptr) {
       AttrCacheEntry* curr = AttrCacheTable::attrCache[i];
       AttrCacheEntry* next = nullptr;
