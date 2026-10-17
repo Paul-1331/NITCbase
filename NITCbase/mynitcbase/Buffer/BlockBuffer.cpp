@@ -32,7 +32,7 @@ BlockBuffer::BlockBuffer(char blockType){
     // number if the method returned a valid block number,
     // otherwise set the error code returned as the block number.
 
-    int allocatedBlock = this->getFreeBlock(blockType);
+    int allocatedBlock = this->getFreeBlock(type);
     this->blockNum = allocatedBlock;
 
     // (The caller must check if the constructor allocatted block successfully
