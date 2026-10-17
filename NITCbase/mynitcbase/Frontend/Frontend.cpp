@@ -9,7 +9,7 @@ int Frontend::create_table(char relname[ATTR_SIZE], int no_attrs, char attribute
 }
 
 int Frontend::drop_table(char relname[ATTR_SIZE]) {
-  Schema::deleteRel(relname);
+  return Schema::deleteRel(relname);
 }
 
 int Frontend::open_table(char relname[ATTR_SIZE]) {
