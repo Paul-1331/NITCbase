@@ -586,3 +586,77 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
 
     return SUCCESS;
 }
+
+int BlockAccess::project(int relId, Attribute *record) {
+    // Get the previous search index of the relation relId from the relation cache
+    RecId prevRecId;
+    int ret = RelCacheTable::getSearchIndex(relId, &prevRecId);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+
+    // Declare block and slot which store the record id of the slot we need to check
+    int block, slot;
+
+    // Determine starting coordinates based on previous searchIndex
+    if (prevRecId.block == -1 && prevRecId.slot == -1) {
+        // (New project operation: start from beginning of relation)
+        RelCatEntry relCatEntry;
+        ret = RelCacheTable::getRelCatEntry(relId, &relCatEntry);
+        if (ret != SUCCESS) {
+            return ret;
+        }
+
+        block = relCatEntry.firstBlk;
+        slot = 0;
+    } 
+    else {
+        // (A project/search operation is already in progress)
+        block = prevRecId.block;
+        slot = prevRecId.slot + 1;
+    }
+
+    // Find the next occupied record slot in the relation
+    while (block != -1) {
+        // Create a RecBuffer object for the current block
+        RecBuffer currentBlock(block);
+
+        HeadInfo head;
+        currentBlock.getHeader(&head);
+
+        // Check if slot has exceeded the number of slots in this block
+        if (slot >= head.numSlots) {
+            // Advance to the right sibling block and reset slot to 0
+            block = head.rblock;
+            slot = 0;
+        } 
+        else {
+            // Inspect the slot map to see if this slot is occupied
+            unsigned char slotMap[head.numSlots];
+            currentBlock.getSlotMap(slotMap);
+
+            if (slotMap[slot] == SLOT_UNOCCUPIED) {
+                slot++;
+            } 
+            else {
+                // Found an occupied record slot
+                break;
+            }
+        }
+    }
+
+    // If all blocks and slots have been exhausted without finding a record
+    if (block == -1) {
+        return E_NOTFOUND;
+    }
+
+    // Update searchIndex to the coordinates of the found record
+    RecId nextRecId{block, slot};
+    RelCacheTable::setSearchIndex(relId, &nextRecId);
+
+    // Copy the record at nextRecId into the caller's output buffer
+    RecBuffer recordBlock(nextRecId.block);
+    recordBlock.getRecord(record, nextRecId.slot);
+
+    return SUCCESS;
+}
