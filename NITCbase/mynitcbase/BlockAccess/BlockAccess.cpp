@@ -1,4 +1,5 @@
 #include "BlockAccess.h"
+#include "../BPlusTree/BPlusTree.h"
 
 #include <cstring>
 
@@ -477,10 +478,30 @@ int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], 
     // Declare a variable called recid to store the searched record
     RecId recId;
 
-    /* search for the record id (recid) corresponding to the attribute with
-    attribute name attrName, with value attrval and satisfying the condition op
-    using linearSearch() */
-    recId = BlockAccess::linearSearch(relId, attrName, attrVal, op);
+    /* get the attribute catalog entry from the attribute cache corresponding
+    to the relation with Id=relid and with attribute_name=attrName  */
+    AttrCatEntry attrCatEntry;
+    int retVal = AttrCacheTable::getAttrCatEntry(relId,attrName,&attrCatEntry);
+    if(retVal!=SUCCESS){
+        return retVal;
+    }
+
+    // get rootBlock from the attribute catalog entry
+    int rootBlock = attrCatEntry.rootBlock;
+
+    // if Index does not exist for the attribute
+    if(rootBlock==-1){
+        /* search for the record id (recid) corresponding to the attribute with
+        attribute name attrName, with value attrval and satisfying the condition op
+        using linearSearch() */
+        recId = BlockAccess::linearSearch(relId, attrName, attrVal, op);
+    }
+    else{
+        /* search for the record id (recid) correspoding to the attribute with
+        attribute name attrName and with value attrval and satisfying the
+        condition op using BPlusTree::bPlusSearch() */
+        recId = BPlusTree::bPlusSearch(relId, attrName, attrVal, op);
+    }
 
     // if there's no record satisfying the given condition (recId = {-1, -1})
     //    return E_NOTFOUND;

@@ -154,6 +154,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
 
   // Reset search cursor to ensure full scan from the first record
   RelCacheTable::resetSearchIndex(srcRelId);
+  AttrCacheTable::resetSearchIndex(srcRelId, attr);
 
   // Repeatedly search for matching records and insert them into targetRel
   while (BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS) {
