@@ -1,4 +1,5 @@
 #include "Algebra.h"
+#include "../BPlusTree/BPlusTree.h"
 
 #include <cstring>
 #include <cstdio>
@@ -156,6 +157,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
   RelCacheTable::resetSearchIndex(srcRelId);
   AttrCacheTable::resetSearchIndex(srcRelId, attr);
 
+  BPlusTree::numOfComparisons = 0;
   // Repeatedly search for matching records and insert them into targetRel
   while (BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS) {
       ret = BlockAccess::insert(targetRelId, record);
@@ -165,6 +167,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
           return ret;
       }
   }
+  printf("Number of Comparisons: %d\n",BPlusTree::numOfComparisons);
 
   Schema::closeRel(targetRel);
   return SUCCESS;

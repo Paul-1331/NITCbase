@@ -106,6 +106,7 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
         int cmpVal;  // will store the difference between the attributes
         // set cmpVal using compareAttrs()
         cmpVal = compareAttrs(record[attrCatEntry.offset],attrVal,attrCatEntry.attrType);
+        BPlusTree::numOfComparisons++;
 
         /* Next task is to check whether this record satisfies the given condition.
            It is determined based on the output of previous comparison and

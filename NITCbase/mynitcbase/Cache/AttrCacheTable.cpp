@@ -67,7 +67,7 @@ int AttrCacheTable::getSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId 
     return E_OUTOFBOUND;
   }
 
-  if(attrCache[relId]!=nullptr) {
+  if(attrCache[relId]==nullptr) {
     return E_RELNOTOPEN;
   }
 
@@ -88,7 +88,7 @@ int AttrCacheTable::getSearchIndex(int relId, int attrOffset, IndexId *searchInd
     return E_OUTOFBOUND;
   }
 
-  if(attrCache[relId]!=nullptr) {
+  if(attrCache[relId]==nullptr) {
     return E_RELNOTOPEN;
   }
 
@@ -109,7 +109,7 @@ int AttrCacheTable::setSearchIndex(int relId, int attrOffset, IndexId *searchInd
     return E_OUTOFBOUND;
   }
 
-  if(attrCache[relId]!=nullptr) {
+  if(attrCache[relId]==nullptr) {
     return E_RELNOTOPEN;
   }
 
@@ -130,7 +130,7 @@ int AttrCacheTable::setSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId 
     return E_OUTOFBOUND;
   }
 
-  if(attrCache[relId]!=nullptr) {
+  if(attrCache[relId]==nullptr) {
     return E_RELNOTOPEN;
   }
 
