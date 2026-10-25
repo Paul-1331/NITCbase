@@ -439,9 +439,80 @@ int IndLeaf::getEntry(void *ptr, int indexNum) {
 }
 
 int IndInternal::setEntry(void *ptr, int indexNum) {
-  return 0;
+    if (indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL) {
+        return E_OUTOFBOUND;
+    }
+
+    unsigned char *bufferPtr;
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+
+    // 3. Typecast the void pointer to an internal entry pointer
+    struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
+
+    /* 4. Calculate offset to indexNum'th entry:
+          The indexNum'th entry begins at an offset of
+          HEADER_SIZE + (indexNum * 20) from bufferPtr.
+    */
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
+
+    /* 5. Copy each field individually to prevent compiler alignment/padding differences:
+          - lChild : 4 bytes (int32_t)
+          - attrVal: 16 bytes (Attribute)
+          - rChild : 4 bytes (int32_t)
+    */
+    memcpy(entryPtr, &(internalEntry->lChild), sizeof(int32_t));
+    memcpy(entryPtr + 4, &(internalEntry->attrVal), sizeof(Attribute));
+    memcpy(entryPtr + 20, &(internalEntry->rChild), sizeof(int32_t));
+
+    // 6. Update dirty bit using StaticBuffer::setDirtyBit()
+    ret = StaticBuffer::setDirtyBit(this->blockNum);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+
+    return SUCCESS;
 }
 
 int IndLeaf::setEntry(void *ptr, int indexNum) {
-  return 0;
+    if (indexNum < 0 || indexNum >= MAX_KEYS_LEAF) {
+        return E_OUTOFBOUND;
+    }
+
+    unsigned char *bufferPtr;
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+
+    // 3. Typecast the input pointer to struct Index
+    struct Index *indexEntry = (struct Index *)ptr;
+
+    /* 4. Calculate offset to indexNum'th entry:
+          The indexNum'th entry begins at an offset of
+          HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE) from bufferPtr.
+    */
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE);
+
+    /* 5. Copy each field individually to prevent compiler alignment/padding issues:
+          struct Index on disk:
+          - attrVal : Attribute (16 bytes)
+          - block   : int (4 bytes)
+          - slot    : int (4 bytes)
+          - unused  : 8 bytes
+          Total size = 32 bytes (LEAF_ENTRY_SIZE)
+    */
+    memcpy(entryPtr, &(indexEntry->attrVal), sizeof(Attribute));
+    memcpy(entryPtr + 16, &(indexEntry->block), sizeof(int));
+    memcpy(entryPtr + 20, &(indexEntry->slot), sizeof(int));
+
+    // 6. Update the dirty bit using StaticBuffer::setDirtyBit()
+    ret = StaticBuffer::setDirtyBit(this->blockNum);
+    if (ret != SUCCESS) {
+        return ret;
+    }
+
+    return SUCCESS;
 }

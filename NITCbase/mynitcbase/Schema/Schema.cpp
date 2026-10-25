@@ -126,3 +126,50 @@ int Schema::deleteRel(char*relName){
 
   return BlockAccess::deleteRelation(relName);
 }
+
+int Schema::createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]) {
+  if (strcmp(relName, RELCAT_RELNAME) == 0 || strcmp(relName, ATTRCAT_RELNAME) == 0) {
+    return E_NOTPERMITTED;
+  }
+
+  int relId = OpenRelTable::getRelId(relName);
+
+  if (relId == E_RELNOTOPEN) {
+    return E_RELNOTOPEN;
+  }
+  
+  return BPlusTree::bPlusCreate(relId, attrName);
+}
+
+int Schema::dropIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]) {
+  if (strcmp(relName, RELCAT_RELNAME) == 0 || strcmp(relName, ATTRCAT_RELNAME) == 0) {
+    return E_NOTPERMITTED;
+  }
+
+  int relId = OpenRelTable::getRelId(relName);
+
+  if (relId == E_RELNOTOPEN) {
+    return E_RELNOTOPEN;
+  }
+
+  // Fetch the attribute catalog entry corresponding to the attribute
+  AttrCatEntry attrCatEntry;
+  int ret = AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);
+  if (ret != SUCCESS) {
+    return E_ATTRNOTEXIST;
+  }
+
+  // Check if an index exists for this attribute
+  int rootBlock = attrCatEntry.rootBlock;
+  if (rootBlock == -1) {
+    return E_NOINDEX;
+  }
+
+  BPlusTree::bPlusDestroy(rootBlock);
+
+  // Update the rootBlock to -1 in the Attribute Cache entry and mark it dirty
+  attrCatEntry.rootBlock = -1;
+  AttrCacheTable::setAttrCatEntry(relId, attrName, &attrCatEntry);
+
+  return SUCCESS;
+}

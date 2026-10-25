@@ -266,6 +266,18 @@ int OpenRelTable::closeRel(int relId) {
     AttrCacheEntry* next = nullptr;
     while (curr != nullptr) {
       next = curr->next;
+      if (curr->dirty) {
+        /* Get the Attribute Catalog entry from attrCache.
+           Then convert it to a record using AttrCacheTable::attrCatEntryToRecord(). */
+        Attribute record[ATTRCAT_NO_ATTRS];
+        AttrCacheTable::attrCatEntryToRecord(&(curr->attrCatEntry), record);
+
+        RecId recId = curr->recId;
+
+        // Write back that entry by instantiating RecBuffer class
+        RecBuffer attrCatBlock(recId.block);
+        attrCatBlock.setRecord(record, recId.slot);
+      }
       free(curr);
       curr = next;
     }
