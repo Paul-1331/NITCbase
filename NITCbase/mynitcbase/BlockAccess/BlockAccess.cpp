@@ -467,7 +467,32 @@ int BlockAccess::insert(int relId, Attribute *record) {
     relCatEntry.numRecs++;
     RelCacheTable::setRelCatEntry(relId, &relCatEntry);
 
-    return SUCCESS;
+    int flag = SUCCESS;
+
+    // Iterate over all the attributes of the relation
+    for (int attrOffset = 0; attrOffset < numOfAttributes; ++attrOffset) {
+        // Get the attribute catalog entry for the attribute from the attribute cache
+        AttrCatEntry attrCatEntry;
+        ret = AttrCacheTable::getAttrCatEntry(relId, attrOffset, &attrCatEntry);
+        if (ret != SUCCESS) {
+            continue;
+        }
+
+        // Check if an index exists for the attribute (rootBlock != -1)
+        if (attrCatEntry.rootBlock != -1) {
+            // Insert the new record into the attribute's B+ tree
+            int retVal = BPlusTree::bPlusInsert(relId, attrCatEntry.attrName,
+                                                record[attrOffset], rec_id);
+
+            if (retVal == E_DISKFULL) {
+                // Disk ran out of space during index node split/allocation
+                // (bPlusInsert already frees the index blocks and resets rootBlock to -1)
+                flag = E_INDEX_BLOCKS_RELEASED;
+            }
+        }
+    }
+
+    return flag;
 }
 
 /*
@@ -572,6 +597,16 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
         RecBuffer attrCatBlock(attrCatRecId.block);
         HeadInfo header;
         attrCatBlock.getHeader(&header);
+
+        // Get the attribute catalog record to check for an index
+        Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+        attrCatBlock.getRecord(attrCatRecord, attrCatRecId.slot);
+
+        int rootBlock = (int)attrCatRecord[ATTRCAT_ROOT_BLOCK_INDEX].nVal;
+        // If an index exists for this attribute, destroy its B+ tree (Stage 11)
+        if (rootBlock != -1) {
+            BPlusTree::bPlusDestroy(rootBlock);
+        }
 
         // Mark the slot unoccupied in the slot map
         unsigned char slotMap[header.numSlots];
