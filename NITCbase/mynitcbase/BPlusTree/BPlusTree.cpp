@@ -81,6 +81,10 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
         HeadInfo intHead;
         internalBlk.getHeader(&intHead);
 
+        if (intHead.numEntries == 0) {
+            return RecId{-1, -1};
+        }
+
         // Declare intEntry which will be used to store an entry of internalBlk.
         InternalEntry intEntry;
 
@@ -179,14 +183,14 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             ++index;
         }
 
-        /* Only for NE operation do we have to check the entire linked list;
-           for all other ops it is guaranteed that the block being searched
-           will have an entry, if it exists, satisfying that op. */
-        if (op != NE) {
+        /* LT and LE cannot have matching entries in later leaves once the
+           current leaf has been exhausted. EQ may span leaves when duplicate
+           keys cross a leaf boundary. */
+        if (op == LE || op == LT) {
             break;
         }
 
-        // Move to the next block in the linked list
+        // EQ, GT, GE, and NE may have matching entries in later leaves.
         block = leafHead.rblock;
         index = 0;
     }
