@@ -2,6 +2,7 @@
 #include <cstring>
 
 int BPlusTree::numOfComparisons = 0;
+int BPlusTree::indexComp = 0;
 
 RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
     // 1. Declare searchIndex which will be used to store search index for attrName.
@@ -74,7 +75,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
     */
 
     while (StaticBuffer::getStaticBlockType(block) == IND_INTERNAL) {
-
+        indexComp++;
         // Load the block into internalBlk using IndInternal::IndInternal().
         IndInternal internalBlk(block);
 
@@ -141,6 +142,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             that satisfies our condition (moving right) ******/
 
     while (block != -1) {
+        indexComp++;
         // Load the block into leafBlk using IndLeaf::IndLeaf().
         IndLeaf leafBlk(block);
         HeadInfo leafHead;

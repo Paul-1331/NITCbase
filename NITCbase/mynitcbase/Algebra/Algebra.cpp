@@ -158,6 +158,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
   AttrCacheTable::resetSearchIndex(srcRelId, attr);
 
   BPlusTree::numOfComparisons = 0;
+  BPlusTree::indexComp = 0;
   // Repeatedly search for matching records and insert them into targetRel
   while (BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS) {
       ret = BlockAccess::insert(targetRelId, record);
@@ -168,6 +169,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
       }
   }
   printf("Number of Comparisons: %d\n",BPlusTree::numOfComparisons);
+  printf("Number of Index Blocks: %d\n",BPlusTree::indexComp);
 
   Schema::closeRel(targetRel);
   return SUCCESS;
