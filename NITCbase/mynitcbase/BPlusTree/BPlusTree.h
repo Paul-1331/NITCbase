@@ -7,6 +7,8 @@
 #include "../define/constants.h"
 #include "../define/id.h"
 
+#include <map>
+
 class BPlusTree {
  private:
   static int findLeafToInsert(int rootBlock, Attribute attrVal, int attrType);
@@ -18,6 +20,8 @@ class BPlusTree {
 
  public:
   static int numOfComparisons;
+  static void resetComparisonStats();
+  static void printComparisonStats();
   static int bPlusCreate(int relId, char attrName[ATTR_SIZE]);
   static int bPlusInsert(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, RecId recordId);
   static RecId bPlusSearch(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, int op);

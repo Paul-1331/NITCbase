@@ -1,7 +1,21 @@
 #include "BPlusTree.h"
 #include <cstring>
+#include <cstdio>
 
 int BPlusTree::numOfComparisons = 0;
+static std::map<int, int> comparisonsPerBlock;
+
+void BPlusTree::resetComparisonStats() {
+    numOfComparisons = 0;
+    comparisonsPerBlock.clear();
+}
+
+void BPlusTree::printComparisonStats() {
+    std::printf("Number of Comparisons: %d\n", numOfComparisons);
+    for (const auto& entry : comparisonsPerBlock) {
+        std::printf("Index block %d: %d comparisons\n", entry.first, entry.second);
+    }
+}
 
 RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
     // 1. Declare searchIndex which will be used to store search index for attrName.
@@ -77,6 +91,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
 
         // Load the block into internalBlk using IndInternal::IndInternal().
         IndInternal internalBlk(block);
+        comparisonsPerBlock.emplace(block, 0);
 
         HeadInfo intHead;
         internalBlk.getHeader(&intHead);
@@ -116,6 +131,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
 
                 int cmpVal = compareAttrs(intEntry.attrVal, attrVal, attrCatEntry.attrType);
                 BPlusTree::numOfComparisons++;
+                comparisonsPerBlock[block]++;
 
                 if ((op == EQ || op == GE) && cmpVal >= 0) {
                     block = intEntry.lChild;
@@ -143,6 +159,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
     while (block != -1) {
         // Load the block into leafBlk using IndLeaf::IndLeaf().
         IndLeaf leafBlk(block);
+        comparisonsPerBlock.emplace(block, 0);
         HeadInfo leafHead;
         leafBlk.getHeader(&leafHead);
 
@@ -155,6 +172,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
 
             int cmpVal = compareAttrs(leafEntry.attrVal, attrVal, attrCatEntry.attrType);
             BPlusTree::numOfComparisons++;
+            comparisonsPerBlock[block]++;
 
             if (
                 (op == EQ && cmpVal == 0) ||
