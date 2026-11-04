@@ -1,7 +1,82 @@
 #include "BPlusTree.h"
+
 #include <cstring>
+#include <iostream>
+#include <queue>
 
 int BPlusTree::numOfComparisons = 0;
+
+void BPlusTree::printBPlusNode(int blockNum, int attrType) {
+    if (StaticBuffer::getStaticBlockType(blockNum) == IND_INTERNAL) {
+        IndInternal indexBuffer(blockNum);
+        HeadInfo header;
+        indexBuffer.getHeader(&header);
+        for (int i = 0; i < header.numEntries; ++i) {
+            if (i != 0) {
+                std::cout << ",";
+            }
+            InternalEntry entry;
+            indexBuffer.getEntry(&entry, i);
+            if (attrType == NUMBER) {
+                std::cout << entry.attrVal.nVal;
+            } else {
+                std::cout << entry.attrVal.sVal;
+            }
+        }
+    } else {
+        IndLeaf indexBuffer(blockNum);
+        HeadInfo header;
+        indexBuffer.getHeader(&header);
+        for (int i = 0; i < header.numEntries; ++i) {
+            if (i != 0) {
+                std::cout << ",";
+            }
+            Index entry;
+            indexBuffer.getEntry(&entry, i);
+            if (attrType == NUMBER) {
+                std::cout << entry.attrVal.nVal;
+            } else {
+                std::cout << entry.attrVal.sVal;
+            }
+        }
+    }
+}
+
+void BPlusTree::printBPlusTreeLevels(int rootBlock, int attrType) {
+    std::queue<int> currentLevel;
+    currentLevel.push(rootBlock);
+
+    int level = 0;
+    while (!currentLevel.empty()) {
+        std::queue<int> nextLevel;
+        const int nodesInLevel = static_cast<int>(currentLevel.size());
+
+        std::cout << "LEVEL " << level++ << std::endl;
+        for (int i = 0; i < nodesInLevel; ++i) {
+            const int blockNum = currentLevel.front();
+            currentLevel.pop();
+
+            printBPlusNode(blockNum, attrType);
+            std::cout << "   ";
+
+            if (StaticBuffer::getStaticBlockType(blockNum) == IND_INTERNAL) {
+                IndInternal internalBuffer(blockNum);
+                HeadInfo header;
+                internalBuffer.getHeader(&header);
+
+                InternalEntry entry;
+                internalBuffer.getEntry(&entry, 0);
+                nextLevel.push(entry.lChild);
+                for (int j = 0; j < header.numEntries; ++j) {
+                    internalBuffer.getEntry(&entry, j);
+                    nextLevel.push(entry.rChild);
+                }
+            }
+        }
+        std::cout << std::endl;
+        currentLevel = nextLevel;
+    }
+}
 
 RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
     // 1. Declare searchIndex which will be used to store search index for attrName.
@@ -270,6 +345,22 @@ int BPlusTree::bPlusCreate(int relId, char attrName[ATTR_SIZE]) {
         block = head.rblock;
     }
 
+    return SUCCESS;
+}
+
+int BPlusTree::printBPlusTree(int relId, char attrName[ATTR_SIZE]) {
+    AttrCatEntry attrCatEntry;
+    int retVal = AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatEntry);
+    if (retVal != SUCCESS) {
+        return retVal;
+    }
+
+    if (attrCatEntry.rootBlock == -1) {
+        return E_NOINDEX;
+    }
+
+    std::cout << "----- B+ TREE -----" << std::endl;
+    printBPlusTreeLevels(attrCatEntry.rootBlock, attrCatEntry.attrType);
     return SUCCESS;
 }
 

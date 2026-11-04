@@ -15,6 +15,8 @@ class BPlusTree {
   static int insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intBlockNum, InternalEntry entry);
   static int splitInternal(int intBlockNum, InternalEntry internalEntries[]);
   static int createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int lChild, int rChild);
+  static void printBPlusNode(int blockNum, int attrType);
+  static void printBPlusTreeLevels(int rootBlock, int attrType);
 
  public:
   static int numOfComparisons;
@@ -22,6 +24,7 @@ class BPlusTree {
   static int bPlusInsert(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, RecId recordId);
   static RecId bPlusSearch(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, int op);
   static int bPlusDestroy(int rootBlockNum);
+  static int printBPlusTree(int relId, char attrName[ATTR_SIZE]);
 };
 
 #endif  // NITCBASE_BPLUSTREE_H

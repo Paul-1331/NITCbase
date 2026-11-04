@@ -37,6 +37,14 @@ int Frontend::drop_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]) {
   return Schema::dropIndex(relname,attrname);
 }
 
+int Frontend::print_bplus_tree(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]) {
+  int relId = OpenRelTable::getRelId(relname);
+  if (relId == E_RELNOTOPEN) {
+    return E_RELNOTOPEN;
+  }
+  return BPlusTree::printBPlusTree(relId, attrname);
+}
+
 int Frontend::insert_into_table_values(char relname[ATTR_SIZE], int attr_count, char attr_values[][ATTR_SIZE]) {
   return Algebra::insert(relname, attr_count, attr_values);
 }

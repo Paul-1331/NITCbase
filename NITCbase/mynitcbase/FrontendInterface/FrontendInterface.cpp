@@ -168,6 +168,14 @@ int RegexHandler::dropIndexHandler() {
   return ret;
 }
 
+int RegexHandler::printBPlusTreeHandler() {
+  char relName[ATTR_SIZE], attrName[ATTR_SIZE];
+  attrToTruncatedArray(m[1], relName);
+  attrToTruncatedArray(m[2], attrName);
+
+  return Frontend::print_bplus_tree(relName, attrName);
+}
+
 int RegexHandler::renameTableHandler() {
   char oldRelName[ATTR_SIZE];
   char newRelName[ATTR_SIZE];
@@ -590,6 +598,7 @@ void printHelp() {
   printf("CLOSE TABLE tablename;\n\t-close the relation \n \n");
   printf("CREATE INDEX ON tablename.attributename;\n\t-create an index on a given attribute. \n\n");
   printf("DROP INDEX ON tablename.attributename; \n\t-delete the index. \n\n");
+  printf("PRINT B+ TREE tablename.attributename; \n\t-print the B+ tree of an indexed attribute. \n\n");
   printf("ALTER TABLE RENAME tablename TO new_tablename;\n\t-rename an existing relation to a given new name. \n\n");
   printf("ALTER TABLE RENAME tablename COLUMN column_name TO new_column_name;\n\t-rename an attribute of an existing relation.\n\n");
   printf("INSERT INTO tablename VALUES ( value1,value2,value3,... );\n\t-insert a single record into the given relation. \n\n");

@@ -20,6 +20,8 @@ class Frontend {
 
   static int drop_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]);
 
+  static int print_bplus_tree(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]);
+
   static int alter_table_rename(char relname_from[ATTR_SIZE], char relname_to[ATTR_SIZE]);
 
   static int alter_table_rename_column(char relname[ATTR_SIZE], char attrname_from[16], char attrname_to[16]);

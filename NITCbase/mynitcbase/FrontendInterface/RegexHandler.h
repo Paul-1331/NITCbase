@@ -18,6 +18,7 @@
 #define CLOSE_TABLE_CMD "\\s*CLOSE\\s+TABLE\\s+([A-Za-z0-9_-]+)\\s*;?"
 #define CREATE_INDEX_CMD "\\s*CREATE\\s+INDEX\\s+ON\\s+([A-Za-z0-9_-]+)\\s*\\.\\s*([#A-Za-z0-9_-]+)\\s*;?"
 #define DROP_INDEX_CMD "\\s*DROP\\s+INDEX\\s+ON\\s+([A-Za-z0-9_-]+)\\s*\\.\\s*([#A-Za-z0-9_-]+)\\s*;?"
+#define PRINT_BPLUS_TREE_CMD "\\s*PRINT\\s+B\\+\\s+TREE\\s+([A-Za-z0-9_-]+)\\s*\\.\\s*([#A-Za-z0-9_-]+)\\s*;?"
 #define RENAME_TABLE_CMD "\\s*ALTER\\s+TABLE\\s+RENAME\\s+([a-zA-Z0-9_-]+)\\s+TO\\s+([a-zA-Z0-9_-]+)\\s*;?"
 #define RENAME_COLUMN_CMD "\\s*ALTER\\s+TABLE\\s+RENAME\\s+([a-zA-Z0-9_-]+)\\s+COLUMN\\s+([#a-zA-Z0-9_-]+)\\s+TO\\s+([#a-zA-Z0-9_-]+)\\s*;?"
 
@@ -50,6 +51,7 @@ class RegexHandler {
       {REGEX(DROP_TABLE_CMD), &RegexHandler::dropTableHandler},
       {REGEX(CREATE_INDEX_CMD), &RegexHandler::createIndexHandler},
       {REGEX(DROP_INDEX_CMD), &RegexHandler::dropIndexHandler},
+      {REGEX(PRINT_BPLUS_TREE_CMD), &RegexHandler::printBPlusTreeHandler},
       {REGEX(RENAME_TABLE_CMD), &RegexHandler::renameTableHandler},
       {REGEX(RENAME_COLUMN_CMD), &RegexHandler::renameColumnHandler},
       {REGEX(INSERT_SINGLE_CMD), &RegexHandler::insertSingleHandler},
@@ -78,6 +80,7 @@ class RegexHandler {
   int dropTableHandler();
   int createIndexHandler();
   int dropIndexHandler();
+  int printBPlusTreeHandler();
   int renameTableHandler();
   int renameColumnHandler();
   int insertSingleHandler();
