@@ -412,7 +412,7 @@ int IndInternal::getEntry(void *ptr, int indexNum) {
 
     memcpy(&(internalEntry->lChild), entryPtr, sizeof(int32_t));
     memcpy(&(internalEntry->attrVal), entryPtr + 4, sizeof(Attribute));
-    memcpy(&(internalEntry->rChild), entryPtr + 20, 4);
+    memcpy(&(internalEntry->rChild), entryPtr + 20, sizeof(int32_t));
 
     return SUCCESS;
 }
@@ -449,16 +449,16 @@ int IndInternal::setEntry(void *ptr, int indexNum) {
         return ret;
     }
 
-    // 3. Typecast the void pointer to an internal entry pointer
+    //    Typecast the void pointer to an internal entry pointer
     struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
 
-    /* 4. Calculate offset to indexNum'th entry:
+    /*    Calculate offset to indexNum'th entry:
           The indexNum'th entry begins at an offset of
           HEADER_SIZE + (indexNum * 20) from bufferPtr.
     */
     unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
 
-    /* 5. Copy each field individually to prevent compiler alignment/padding differences:
+    /*    Copy each field individually to prevent compiler alignment/padding differences:
           - lChild : 4 bytes (int32_t)
           - attrVal: 16 bytes (Attribute)
           - rChild : 4 bytes (int32_t)
@@ -467,7 +467,7 @@ int IndInternal::setEntry(void *ptr, int indexNum) {
     memcpy(entryPtr + 4, &(internalEntry->attrVal), sizeof(Attribute));
     memcpy(entryPtr + 20, &(internalEntry->rChild), sizeof(int32_t));
 
-    // 6. Update dirty bit using StaticBuffer::setDirtyBit()
+    // Update dirty bit using StaticBuffer::setDirtyBit()
     ret = StaticBuffer::setDirtyBit(this->blockNum);
     if (ret != SUCCESS) {
         return ret;
@@ -487,16 +487,16 @@ int IndLeaf::setEntry(void *ptr, int indexNum) {
         return ret;
     }
 
-    // 3. Typecast the input pointer to struct Index
+    // Typecast the input pointer to struct Index
     struct Index *indexEntry = (struct Index *)ptr;
 
-    /* 4. Calculate offset to indexNum'th entry:
+    /*    Calculate offset to indexNum'th entry:
           The indexNum'th entry begins at an offset of
           HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE) from bufferPtr.
     */
     unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE);
 
-    /* 5. Copy each field individually to prevent compiler alignment/padding issues:
+    /*    Copy each field individually to prevent compiler alignment/padding issues:
           struct Index on disk:
           - attrVal : Attribute (16 bytes)
           - block   : int (4 bytes)
@@ -508,7 +508,7 @@ int IndLeaf::setEntry(void *ptr, int indexNum) {
     memcpy(entryPtr + 16, &(indexEntry->block), sizeof(int));
     memcpy(entryPtr + 20, &(indexEntry->slot), sizeof(int));
 
-    // 6. Update the dirty bit using StaticBuffer::setDirtyBit()
+    // Update the dirty bit using StaticBuffer::setDirtyBit()
     ret = StaticBuffer::setDirtyBit(this->blockNum);
     if (ret != SUCCESS) {
         return ret;

@@ -3,8 +3,11 @@
 
 int BPlusTree::numOfComparisons = 0;
 
-RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
-    // 1. Declare searchIndex which will be used to store search index for attrName.
+// return next record that satisfies condition
+// arguments relId, attrName , value of attribute to be compared, operation
+// returns RecId {block,slot}
+RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int op){
+    // Declare searchIndex which will be used to store search index for attrName.
     IndexId searchIndex;
 
     /* Get the search index corresponding to attribute with name attrName
@@ -37,7 +40,8 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
             return RecId{-1, -1};
         }
 
-    } else {
+    } 
+    else {
         /* A valid searchIndex points to an entry in the leaf index of the attribute's
            B+ Tree which had previously satisfied the op for the given attrVal. */
         block = searchIndex.block;
@@ -103,7 +107,8 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
 
             block = intEntry.lChild;
 
-        } else {
+        } 
+        else {
             /*
             - EQ, GT and GE: move to the left child of the first entry that is
               greater than (or equal to) attrVal.
@@ -173,7 +178,8 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
                 // Return the recId {leafEntry.block, leafEntry.slot}
                 return RecId{leafEntry.block, leafEntry.slot};
 
-            } else if ((op == EQ || op == LE || op == LT) && cmpVal > 0) {
+            } 
+            else if ((op == EQ || op == LE || op == LT) && cmpVal > 0) {
                 /* Future entries will not satisfy EQ, LE, LT since values
                    are arranged in ascending order in the leaves */
                 return RecId{-1, -1};
@@ -290,7 +296,8 @@ int BPlusTree::bPlusDestroy(int rootBlockNum) {
 
         return SUCCESS;
 
-    } else if (type == IND_INTERNAL) {
+    } 
+    else if (type == IND_INTERNAL) {
         // Declare an instance of IndInternal for rootBlockNum using Constructor 1 (existing block)
         IndInternal internalBlk(rootBlockNum);
 
@@ -323,7 +330,8 @@ int BPlusTree::bPlusDestroy(int rootBlockNum) {
 
         return SUCCESS;
 
-    } else {
+    } 
+    else {
         // Block is not an index block (neither IND_LEAF nor IND_INTERNAL)
         return E_INVALIDBLOCK;
     }
