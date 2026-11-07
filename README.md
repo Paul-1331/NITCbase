@@ -1,6 +1,6 @@
 # NITCbase
 
-NITCbase is a small, educational relational database management system
+NITCbase is an educational relational database management system
 developed in C++ as part of the Database System Design Lab at the National
 Institute of Technology Calicut (NITC).
 
